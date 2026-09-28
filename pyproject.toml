@@ -1,0 +1,22 @@
+[project] 
+name = "telco-customer-segmentation-churn"
+version = "1.0.0"
+description = "A project for telco customer segmentation and churn prediction."
+readme = "README.md"
+authors = [
+    { name = "reda-guemry", email = "guemryreda@gmail.com" }
+]
+
+requires-python = ">=3.14"
+
+dependencies = [
+    "pandas>=3.0.6",
+    "scikit-learn>=1.9.1",
+    "seaborn>=0.13.2",
+]
+
+[dependency-groups]
+dev = [
+    "jupyter>=1.1.1",
+]
+
