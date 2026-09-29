@@ -1,0 +1,7 @@
+
+from src.config.path import BASE_DIR, ROW_DATA_DIR
+from src.config.schema import NUMERICAL_COLUMNS ,CATEGORICAL_COLUMNS
+
+
+
+__all__ = ["BASE_DIR", "ROW_DATA_DIR", "NUMERICAL_COLUMNS", "CATEGORICAL_COLUMNS"]
