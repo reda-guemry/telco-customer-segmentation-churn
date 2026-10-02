@@ -1,7 +1,14 @@
 
 
-NUMERICAL_COLUMNS = ['SeniorCitizen', 'tenure', 'MonthlyCharges', 'TotalCharges']
-CATEGORICAL_COLUMNS = ['gender', 'Partner', 'Dependents', 'PhoneService',
-       'MultipleLines', 'InternetService', 'OnlineSecurity', 'OnlineBackup',
-       'DeviceProtection', 'TechSupport', 'StreamingTV', 'StreamingMovies',
-       'Contract', 'PaperlessBilling', 'PaymentMethod', 'Churn']
+NUMERICAL_COLUMNS = ['tenure', 'MonthlyCharges', 'TotalCharges' ]
+
+CATEGORICAL_COLUMNS = ['MultipleLines', 'InternetService', 'OnlineSecurity',
+       'OnlineBackup','DeviceProtection', 'TechSupport', 'StreamingTV',
+       'StreamingMovies','Contract', 'PaymentMethod']
+
+GENDER_COLUMNS = ['gender']
+
+BINARY_COLUMNS = ['SeniorCitizen' , 'Partner', 'Dependents', 'PhoneService', 'PaperlessBilling' ]
+
+DROP_COLUMNS = ['customerID', 'Churn']
+
