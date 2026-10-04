@@ -1,4 +1,4 @@
-from src.config.path import BASE_DIR, ROW_DATA_DIR, CLUSTERING_DIR
+from src.config.path import BASE_DIR, ROW_DATA_DIR
 from src.config.schema import (
     NUMERICAL_COLUMNS,
     CATEGORICAL_COLUMNS,
@@ -15,5 +15,4 @@ __all__ = [
     "DROP_COLUMNS",
     "BINARY_COLUMNS",
     "GENDER_COLUMNS",
-    "CLUSTERING_DIR",
 ]
