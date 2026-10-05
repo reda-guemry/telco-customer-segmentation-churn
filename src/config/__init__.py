@@ -4,7 +4,8 @@ from src.config.schema import (
     CATEGORICAL_COLUMNS,
     DROP_COLUMNS,
     BINARY_COLUMNS,
-    GENDER_COLUMNS,
+    GENDER_COLUMNS, 
+    TARGET , 
 )
 
 __all__ = [
@@ -15,4 +16,5 @@ __all__ = [
     "DROP_COLUMNS",
     "BINARY_COLUMNS",
     "GENDER_COLUMNS",
+    "TARGET",
 ]

@@ -12,3 +12,4 @@ BINARY_COLUMNS = ['SeniorCitizen' , 'Partner', 'Dependents', 'PhoneService', 'Pa
 
 DROP_COLUMNS = ['customerID', 'Churn']
 
+TARGET = 'Churn'
