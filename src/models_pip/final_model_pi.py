@@ -8,19 +8,23 @@ from imblearn.over_sampling import SMOTE
 from imblearn.pipeline import Pipeline
 
 
+from src import KMeansTransformer
+
+
 def final_models(preprocessor):
     models = {
         "logistic_regression": Pipeline(
             [
                 ("preprocessor", preprocessor),
+                ("Kmeans", KMeansTransformer(n_clusters=3, random_state=42)), 
                 ("smote", SMOTE(random_state=42)),
-                ("Kmeans", ) , 
                 ("classifier", LogisticRegression()),
             ]
         ),
         "decision_tree": Pipeline(
             [
                 ("preprocessor", preprocessor),
+                ("Kmeans", KMeansTransformer(n_clusters=3, random_state=42)), 
                 ("smote", SMOTE(random_state=42)),
                 ("classifier", DecisionTreeClassifier()),
             ]
@@ -28,6 +32,7 @@ def final_models(preprocessor):
         "random_forest": Pipeline(
             [
                 ("preprocessor", preprocessor),
+                ("Kmeans", KMeansTransformer(n_clusters=3, random_state=42)), 
                 ("smote", SMOTE(random_state=42)),
                 ("classifier", RandomForestClassifier()),
             ]
@@ -35,6 +40,7 @@ def final_models(preprocessor):
         "SVC": Pipeline(
             [
                 ("preprocessor", preprocessor),
+                ("Kmeans", KMeansTransformer(n_clusters=3, random_state=42)), 
                 ("smote", SMOTE(random_state=42)),
                 ("classifier", SVC(probability=True)),
             ]
@@ -42,6 +48,7 @@ def final_models(preprocessor):
         "XGBoost": Pipeline(
             [
                 ("preprocessor", preprocessor),
+                ("Kmeans", KMeansTransformer(n_clusters=3, random_state=42)), 
                 ("smote", SMOTE(random_state=42)),
                 ("classifier", XGBClassifier()),
             ]
