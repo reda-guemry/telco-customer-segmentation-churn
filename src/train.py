@@ -1,3 +1,8 @@
+import mlflow
+import mlflow.sklearn
+
+mlflow.set_experiment("My_ML_Project")
+
 from sklearn.model_selection import train_test_split, RandomizedSearchCV, GridSearchCV
 from src.models_pip import final_models
 from src.data_loader import loader
