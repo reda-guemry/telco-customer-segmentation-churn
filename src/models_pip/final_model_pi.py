@@ -8,7 +8,7 @@ from imblearn.over_sampling import SMOTE
 from imblearn.pipeline import Pipeline
 
 
-from src import KMeansTransformer
+from src.kmean import KMeansTransformer
 
 
 def final_models(preprocessor):
