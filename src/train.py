@@ -2,6 +2,8 @@ import mlflow
 import mlflow.sklearn
 import matplotlib.pyplot as plt
 
+import joblib
+
 from sklearn.model_selection import (
     train_test_split,
     ParameterSampler,
@@ -17,7 +19,7 @@ from sklearn.metrics import (
 )
 
 from src.models_pip import final_models
-from src.data_loader import loader
+from src.data_loader import loader, data_split
 from src.config import TARGET
 from src.data_processing import get_preprocessor
 
@@ -27,18 +29,7 @@ df = loader()
 
 preprocessor = get_preprocessor()
 models = final_models(preprocessor)
-
-X = df.drop(columns=[TARGET])
-Y = df[TARGET].map({"No": 0, "Yes": 1})
-
-x_train, x_test, y_train, y_test = train_test_split(
-    X,
-    Y,
-    test_size=0.2,
-    random_state=42,
-    stratify=Y,
-)
-
+x_train, x_test, y_train, y_test =  data_split(df, test_size=0.2, random_state=42)
 
 # Model
 
@@ -192,7 +183,7 @@ with mlflow.start_run(run_name="Logistic Regression Search") as parent_run:
 
     # Log best model in Parent
 
-    mlflow.log_metric(best_result)
+    mlflow.log_metrics(best_result)
 
     mlflow.log_params({f"best_{key}": value for key, value in best_params.items()})
 
@@ -224,4 +215,10 @@ with mlflow.start_run(run_name="Logistic Regression Search") as parent_run:
         name="model",
         serialization_format="cloudpickle",
     )
+
+    joblib.dump(
+        best_model,
+        "models/best_model.pkl",
+    )
+
 
