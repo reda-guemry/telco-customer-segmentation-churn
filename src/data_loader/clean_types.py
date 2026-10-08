@@ -1,11 +1,10 @@
 
 
-from src import NUMERICAL_COLUMNS
-
+    
 import pandas as pd
 
 
-def clean_types(df): 
+def clean_types(df, numerical_columns): 
     """
     Clean the data types of the DataFrame.
 
@@ -15,6 +14,6 @@ def clean_types(df):
     Returns:
         pd.DataFrame: The DataFrame with cleaned data types.
     """
-    for col in NUMERICAL_COLUMNS:
+    for col in numerical_columns:
         df[col] = pd.to_numeric(df[col], errors='coerce')
     return df

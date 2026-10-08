@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-from src import ROW_DATA_DIR
+from src.config import ROW_DATA_DIR, NUMERICAL_COLUMNS
 from src.data_loader import clean_types
 
 
@@ -14,6 +14,6 @@ def loader() -> pd.DataFrame:
     """
     df = pd.read_csv(ROW_DATA_DIR)
 
-    df = clean_types(df)
+    df = clean_types(df ,NUMERICAL_COLUMNS )
 
     return df
