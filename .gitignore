@@ -11,4 +11,7 @@ __pycache__/
 
 note.txt
 mlflow.db
-mlruns 
+mlruns
+
+# Generated model artifacts (produced by the training scripts)
+models/*.pkl 

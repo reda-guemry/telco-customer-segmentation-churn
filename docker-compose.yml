@@ -1,0 +1,97 @@
+name: telco-segmentation
+
+services:
+  # ------------------------------------------------------------------ MLflow
+  # Only used by the training jobs for experiment tracking. The Streamlit app
+  # does NOT depend on it.
+  mlflow:
+    build: .
+    image: telco-segmentation:latest
+    restart: unless-stopped
+    command:
+      - mlflow
+      - server
+      - --host
+      - 0.0.0.0
+      - --port
+      - "5000"
+      - --backend-store-uri
+      - sqlite:////mlflow/mlflow.db
+      - --artifacts-destination
+      - /mlflow/artifacts
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow-data:/mlflow
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  # --------------------------------------------------------------- Streamlit
+  # Prediction app: customer characteristics -> segment + churn + probability.
+  # It only reads the joblib files from the shared `models/` directory and has
+  # no dependency on MLflow.
+  streamlit:
+    build: .
+    image: telco-segmentation:latest
+    restart: unless-stopped
+    command:
+      - streamlit
+      - run
+      - app/streamlit_app.py
+      - --server.address=0.0.0.0
+      - --server.port=8501
+    ports:
+      - "8501:8501"
+    volumes:
+      # Models produced by the two training jobs (classification + clustering).
+      - ./models:/app/models
+
+  # ------------------------------------------ Training jobs (profile `train`)
+  # Streamlit consumes their output, so run them first:
+  #   docker compose --profile train run --rm train-clustering
+  #   docker compose --profile train run --rm train-churn
+  #   docker compose up streamlit
+  train-clustering:
+    build: .
+    image: telco-segmentation:latest
+    profiles:
+      - train
+    command:
+      - python
+      - -m
+      - src.train_clustering
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    volumes:
+      - ./models:/app/models
+    depends_on:
+      mlflow:
+        condition: service_healthy
+
+  train-churn:
+    build: .
+    image: telco-segmentation:latest
+    profiles:
+      - train
+    command:
+      - python
+      - -m
+      - src.train
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    volumes:
+      - ./models:/app/models
+    depends_on:
+      mlflow:
+        condition: service_healthy
+
+volumes:
+  mlflow-data:
