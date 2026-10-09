@@ -1,11 +1,13 @@
 from src.config.path import BASE_DIR, ROW_DATA_DIR
+from src.config.hyperparameters import CLUSTERING_PARAM_GRIDS, LOWER_IS_BETTER
 from src.config.schema import (
     NUMERICAL_COLUMNS,
     CATEGORICAL_COLUMNS,
     DROP_COLUMNS,
     BINARY_COLUMNS,
-    GENDER_COLUMNS, 
-    TARGET , 
+    GENDER_COLUMNS,
+    TOTAL_CHARGES_COLUMN,
+    TARGET,
 )
 
 __all__ = [
@@ -16,5 +18,8 @@ __all__ = [
     "DROP_COLUMNS",
     "BINARY_COLUMNS",
     "GENDER_COLUMNS",
+    "TOTAL_CHARGES_COLUMN",
     "TARGET",
+    "CLUSTERING_PARAM_GRIDS",
+    "LOWER_IS_BETTER",
 ]

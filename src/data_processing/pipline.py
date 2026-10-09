@@ -4,6 +4,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder, FunctionTransformer
 
 import numpy as np
+import pandas as pd
 
 from src import (
     CATEGORICAL_COLUMNS,
@@ -21,19 +22,42 @@ def binary_encoding(x):
 def gender_encoding(x):
     return x.replace({"Male": 1, "Female": 0})
 
-def total_charges_cleaning(x):
-    if isinstance(x, str) or np.isnan(x) :
-        x = x.replace(" ", 0)
 
-    return np.log1p(float(x))
+def total_charges_cleaning(x):
+    # TotalCharges may contain blanks when read straight from the raw CSV; the
+    # loader already coerces it to numeric (NaN for blanks). This keeps the
+    # transform vectorised so it can be applied to a whole column by sklearn.
+    values = pd.to_numeric(pd.Series(np.asarray(x).ravel()), errors="coerce")
+    values = values.fillna(0.0).to_numpy(dtype=float)
+    return np.log1p(values).reshape(-1, 1)
+
+
+# TotalCharges is handled by its own (log) transformer above, so it must not be
+# duplicated inside the generic numerical block.
+NUMERICAL_FEATURES = [c for c in NUMERICAL_COLUMNS if c not in TOTAL_CHARGES_COLUMN]
+
 
 def get_preprocessor() -> ColumnTransformer:
 
     preprocessor = ColumnTransformer(
         [
-            ("binary", Pipeline([("encoding", binary_encoding)]), BINARY_COLUMNS),
-            ("gender", Pipeline([("encoding", gender_encoding)]), GENDER_COLUMNS),
-            ("total_charges", Pipeline([("cleaning", total_charges_cleaning)]), TOTAL_CHARGES_COLUMN),
+            (
+                "binary",
+                FunctionTransformer(binary_encoding, feature_names_out="one-to-one"),
+                BINARY_COLUMNS,
+            ),
+            (
+                "gender",
+                FunctionTransformer(gender_encoding, feature_names_out="one-to-one"),
+                GENDER_COLUMNS,
+            ),
+            (
+                "total_charges",
+                FunctionTransformer(
+                    total_charges_cleaning, feature_names_out="one-to-one"
+                ),
+                TOTAL_CHARGES_COLUMN,
+            ),
             (
                 "numerical",
                 Pipeline(
@@ -42,7 +66,7 @@ def get_preprocessor() -> ColumnTransformer:
                         ("scaler", StandardScaler()),
                     ]
                 ),
-                NUMERICAL_COLUMNS,
+                NUMERICAL_FEATURES,
             ),
             (
                 "categorical",
