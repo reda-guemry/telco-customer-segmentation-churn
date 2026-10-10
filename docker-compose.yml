@@ -36,8 +36,6 @@ services:
 
   # --------------------------------------------------------------- Streamlit
   # Prediction app: customer characteristics -> segment + churn + probability.
-  # It only reads the joblib files from the shared `models/` directory and has
-  # no dependency on MLflow.
   streamlit:
     build: .
     image: telco-segmentation:latest

@@ -23,9 +23,6 @@ RUN uv sync --frozen --no-install-project --no-dev
 # Copy the project (data, src, app, notebooks...).
 COPY . .
 
-# Ensure the environment is complete.
-RUN uv sync --frozen --no-install-project --no-dev
-
 EXPOSE 5000 8501
 
 # Default to the dashboard; docker-compose overrides the command per service.
