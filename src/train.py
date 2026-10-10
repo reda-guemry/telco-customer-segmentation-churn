@@ -1,224 +1,77 @@
+"""Train and track all churn classification models.
+
+Run from the project root::
+
+    python -m src.train
+
+Every pipeline returned by ``src.models_pip.final_models`` (LogisticRegression,
+DecisionTree, RandomForest, SVC, XGBoost -- each wrapped with the preprocessor,
+the KMeans transformer and SMOTE) is tuned with a randomized hyperparameter
+search (see ``src.config.CLASSIFICATION_PARAM_GRIDS``). The cross-validation
+score, the test metrics and figures of every trial are logged to MLflow using
+the same nested-run structure as the clustering job.
+
+The best model of every algorithm is saved as ``models/best_<name>.pkl`` and the
+overall best as ``models/best_model.pkl`` (the file consumed by the inference
+app). The best model is selected by the mean cross-validation ``recall`` on the
+churn class.
+"""
+
+
+import os
+
 import mlflow
-import mlflow.sklearn
-import matplotlib.pyplot as plt
 
-import joblib
-
-from sklearn.model_selection import (
-    train_test_split,
-    ParameterSampler,
-    cross_val_score,
-)
-from sklearn.metrics import (
-    ConfusionMatrixDisplay,
-    roc_auc_score,
-    accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score,
-)
-
-from src.models_pip import final_models
-from src.data_loader import loader, data_split
-from src.config import TARGET
+from src.classification import run_classification_experiment
+from src.config import CLASSIFICATION_PARAM_GRIDS
+from src.data_loader import data_split, loader
 from src.data_processing import get_preprocessor
+from src.models_pip import final_models
 
-# Load data
-    
-df = loader()
-
-preprocessor = get_preprocessor()
-models = final_models(preprocessor)
-x_train, x_test, y_train, y_test =  data_split(df, test_size=0.2, random_state=42)
-
-# Model
-
-model = models["logistic_regression"]
-
-# Hyperparameters
-
-param_grid = {
-    "classifier__solver": ["saga"],
-    "classifier__penalty": ["elasticnet"],
-    "classifier__C": [0.01, 0.1, 1, 10],
-    "classifier__l1_ratio": [1, 0.5, 0],
-    "classifier__max_iter": [1000, 1500, 2000, 2500, 3000],
-    "classifier__class_weight": [None, "balanced"],
+# Random-search budget per model. The full grids are large (up to ~3,600
+# combinations for XGBoost), so each model samples a capped number of trials.
+N_ITER = {
+    "logistic_regression": 25,
+    "decision_tree": 20,
+    "random_forest": 20,
+    "SVC": 15,
+    "XGBoost": 20,
 }
 
 
-# Generate 50 random combinations
-param_samples = list(
-    ParameterSampler(
-        param_grid,
-        n_iter=50,
+def main() -> None:
+    # Allow overriding the tracking backend (defaults to the local mlflow.db).
+    tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
+    if tracking_uri:
+        mlflow.set_tracking_uri(tracking_uri)
+
+    df = loader()
+    preprocessor = get_preprocessor()
+    models = final_models(preprocessor)
+
+    X_train, X_test, y_train, y_test = data_split(
+        df,
+        test_size=0.2,
         random_state=42,
     )
-)
 
-# MLflow Experiment
-
-mlflow.set_experiment("Churn Prediction")
-
-
-with mlflow.start_run(run_name="Logistic Regression Search") as parent_run:
-
-    # Parent information
-    mlflow.set_tag("run_type", "parent")
-    mlflow.set_tag("model_type", "logistic_regression")
-
-    mlflow.log_param("n_trials", 50)
-    mlflow.log_param("cv_folds", 5)
-    mlflow.log_param("scoring", "recall")
-
-    best_score = -float("inf")
-    best_result = None
-    best_model = None
-    best_params = None
-
-    # Hyperparameter Search
-
-    for trial_number, params in enumerate(param_samples, start=1):
-
-        print(f"Trial {trial_number}/50")
-        print(params)
-
-        # Child Run
-
-        with mlflow.start_run(
-            run_name=f"trial_{trial_number}",
-            nested=True,
-        ) as child_run:
-
-            mlflow.set_tag("run_type", "child")
-            mlflow.set_tag(
-                "parent_run_id",
-                parent_run.info.run_id,
-            )
-
-            mlflow.log_param("trial_number", trial_number)
-
-            # Log hyperparameters
-            mlflow.log_params(params)
-
-            # Create model
-
-            trial_model = model.set_params(**params)
-
-            # Cross Validation
-
-            cv_scores = cross_val_score(
-                trial_model,
-                x_train,
-                y_train,
-                cv=5,
-                scoring="recall",
-                n_jobs=-1,
-            )
-
-            mean_recall = cv_scores.mean()
-            std_recall = cv_scores.std()
-
-            mlflow.log_metric(
-                "cv_recall_mean",
-                mean_recall,
-            )
-
-            mlflow.log_metric(
-                "cv_recall_std",
-                std_recall,
-            )
-
-            # Fit on complete training set
-
-            trial_model.fit(
-                x_train,
-                y_train,
-            )
-
-            # Test evaluation
-
-            prediction = trial_model.predict(x_test)
-
-            probabilities = trial_model.predict_proba(x_test)[:, 1]
-
-            result = {
-                "accuracy": accuracy_score(
-                    y_test,
-                    prediction,
-                ),
-                "precision": precision_score(
-                    y_test,
-                    prediction,
-                ),
-                "recall": recall_score(
-                    y_test,
-                    prediction,
-                ),
-                "f1": f1_score(
-                    y_test,
-                    prediction,
-                ),
-                "roc_auc": roc_auc_score(
-                    y_test,
-                    probabilities,
-                ),
-            }
-
-            mlflow.log_metrics(result)
-
-            # Save best model
-
-            if mean_recall > best_score :
-
-                best_score = mean_recall
-                best_result = result.copy()
-                best_model = trial_model
-                best_params = params.copy()
-
-                mlflow.set_tag(
-                    "best_trial",
-                    "true",
-                )
-
-    # Log best model in Parent
-
-    mlflow.log_metrics(best_result)
-
-    mlflow.log_params({f"best_{key}": value for key, value in best_params.items()})
-
-    # Final Confusion Matrix
-
-    final_prediction = best_model.predict(x_test)
-
-    ConfusionMatrixDisplay.from_predictions(
+    run_classification_experiment(
+        models,
+        X_train,
+        y_train,
+        X_test,
         y_test,
-        final_prediction,
-    )
-
-    plt.title("Confusion Matrix - Best Model")
-    plt.tight_layout()
-
-    plt.savefig("confusion_matrix.png")
-
-    plt.close()
-
-    mlflow.log_artifact(
-        "confusion_matrix.png",
-        artifact_path="figures",
-    )
-
-    # Log final model
-
-    mlflow.sklearn.log_model(
-        best_model,
-        name="model",
-        serialization_format="cloudpickle",
-    )
-
-    joblib.dump(
-        best_model,
-        "models/best_model.pkl",
+        experiment_name="Churn Prediction",
+        parent_run_name="Classification Search",
+        param_grids=CLASSIFICATION_PARAM_GRIDS,
+        n_iter=N_ITER,
+        scoring="recall",
+        cv=5,
+        random_state=42,
+        log_plots=True,
+        models_dir="models",
     )
 
 
+if __name__ == "__main__":
+    main()

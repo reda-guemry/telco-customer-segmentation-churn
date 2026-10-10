@@ -15,8 +15,15 @@ from src import (
     loader,
 )
 
+
 def binary_encoding(x):
-    return x.replace({"Yes": 1, "No": 0})
+    return x.replace({
+        "Yes": 1,  
+        "No": 0 ,
+        "No internet service": 0,
+        "No phone service": 0
+    })
+
 
 
 def gender_encoding(x):
