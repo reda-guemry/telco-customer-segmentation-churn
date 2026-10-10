@@ -10,4 +10,27 @@ class BuildFeatures(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=None):
+        
+        X = self.add_monthly_charge_per_service(X)
+        
         return X
+
+    def add_monthly_charge_per_service(self, X):
+        X = X.copy()
+
+        X["MonthlyChargesPerService"] = (
+            X["MonthlyCharges"]
+            / X[
+                [
+                    "PhoneService",
+                    "MultipleLines",
+                    "OnlineSecurity",
+                    "OnlineBackup",
+                    "DeviceProtection",
+                    "TechSupport",
+                    "StreamingTV",
+                    "StreamingMovies",
+                ].sum(axis=1)
+            ]
+        )
+        return X 

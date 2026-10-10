@@ -1,5 +1,9 @@
 from src.config.path import BASE_DIR, ROW_DATA_DIR
-from src.config.hyperparameters import CLUSTERING_PARAM_GRIDS, LOWER_IS_BETTER
+from src.config.hyperparameters import (
+    CLASSIFICATION_PARAM_GRIDS,
+    CLUSTERING_PARAM_GRIDS,
+    LOWER_IS_BETTER,
+)
 from src.config.schema import (
     NUMERICAL_COLUMNS,
     CATEGORICAL_COLUMNS,
@@ -21,5 +25,6 @@ __all__ = [
     "TOTAL_CHARGES_COLUMN",
     "TARGET",
     "CLUSTERING_PARAM_GRIDS",
+    "CLASSIFICATION_PARAM_GRIDS",
     "LOWER_IS_BETTER",
 ]
